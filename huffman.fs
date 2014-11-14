@@ -7,14 +7,14 @@
 //
 
 
-Module Huff
+module Huff
 
     let rec zip L1 L2 =
       match L1 with
       | [] -> []
       | h1::t1 -> match L2 with
-              | [] -> []
-              | h2::t2 -> (h1,h2) :: (zip t1 t2)
+                  | [] -> []
+                  | h2::t2 -> (h1,h2) :: (zip t1 t2)
     let asciiTable = zip [for c in 'A'..'Z' do yield c] [for i in 65..90 do yield i]
 
 
@@ -59,23 +59,28 @@ Module Huff
                      Node(Leaf('N'),
                           Leaf('I')))))
 
-    let explode str = [ for chr in str yield chr ]
+    let explode str = [ for chr in str -> chr ]
 
-    let encodeChar c = 
+    let encodeChar ch = 
         let rec findInTable table x = 
             match table with
             | [] -> "" 
-            | (char, val)::t -> if char = x 
-                                then val
-                                else findInTable t x
-        findInTable hoffmanTable c
+            | (chr,vl)::t -> if x = chr
+                             then vl
+                             else findInTable t x 
+        findInTable huffmanTable ch
     
-    let encode str = new string( [ for chr in (explode str) yield (encodeChar chr)])
-
 
     // decode part
 
-    let implode lst = new string( lst )
+    let implode lst =
+        let rec impl l accum =
+            match l with
+            | [] -> accum
+            | h::t -> impl t (accum + new string( h, 1))
+        impl lst ""
+     
+
 
     let rec findCharInTree tree lst1 = 
         match tree with 
@@ -87,10 +92,13 @@ Module Huff
                                  | '1'::tail -> findCharInTree right tail
 
     let rec decodeList lst accum = 
-        match (findCharInTree hoffmanTree lst) with
+        match (findCharInTree huffmanTree lst) with
         | ( c , [] ) -> accum @ [c]
         | ( c , h::t ) -> decodeList (h::t) (accum @ [c])
 
-    let decode str = implode ( decodeList ( explode str ) ) 
+
+    let decode str = implode ( decodeList ( explode str ) [] ) 
+    
+    let encode str = implode [for chr in (explode str) do yield!( explode( encodeChar chr) )]
     
         
