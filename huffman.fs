@@ -88,24 +88,27 @@ module Huff
         impl lst ""
      
 
-    // findCharInTree - recursive helper function to find one char in the given tree
-    // params: the tree to search in 
-    //         the list of zeros and ones to search with
-    // returns: a tuple with the char found and the remaining list
-    let rec findCharInTree tree lst1 = 
-        match tree with 
-        | Leaf( c ) -> ( c , lst1 )
-        | Node( left, right ) -> match lst1 with 
-                                 | [] -> printf "invalid encoding"
-                                         ( 'x', [] )
-                                 | '0'::tail -> findCharInTree left tail
-                                 | '1'::tail -> findCharInTree right tail
 
     // decodeList - recusive helper function to decode a list of zeros and ones
     // params: the list of zeros and ones
     //         accumulator - this should initially be an empty list
     // returns: a list of chars 
     let rec decodeList lst accum = 
+    
+        // findCharInTree - recursive helper function to find one char in the given tree
+        // params: the tree to search in 
+        //         the list of zeros and ones to search with
+        // returns: a tuple with the char found and the remaining list
+        let rec findCharInTree tree lst = 
+            match tree with 
+            | Leaf( c ) -> ( c , lst1 )
+            | Node( left, right ) -> match lst with 
+                                     | [] -> printf "invalid encoding"
+                                             ( 'x', [] )
+                                     | '0'::tail -> findCharInTree left tail
+                                     | '1'::tail -> findCharInTree right tail
+
+
         match (findCharInTree huffmanTree lst) with
         | ( c , [] ) -> accum @ [c]
         | ( c , h::t ) -> decodeList (h::t) (accum @ [c])
