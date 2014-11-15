@@ -8,15 +8,20 @@
 
 
 module Huff
+    
+    type huffmanTreeType =
+      | Leaf of char
+      | Node of huffmanTreeType * huffmanTreeType
 
+    // zip function provided in assignment
     let rec zip L1 L2 =
       match L1 with
       | [] -> []
       | h1::t1 -> match L2 with
                   | [] -> []
                   | h2::t2 -> (h1,h2) :: (zip t1 t2)
+    
     let asciiTable = zip [for c in 'A'..'Z' do yield c] [for i in 65..90 do yield i]
-
 
     let huffmanTable = 
         [ ('A',"1011");   ('B',"100000");   ('C',"01000");('D',"10101");    ('E',"110");
@@ -25,11 +30,6 @@ module Huff
           ('P',"100001"); ('Q',"000011001");('R',"0101"); ('S',"0111");     ('T',"001");
           ('U',"01001");  ('V',"000010");   ('W',"00010");('X',"000011010");('Y',"100010");
           ('Z',"000011000")] 
-
-
-    type huffmanTreeType =
-      | Leaf of char
-      | Node of huffmanTreeType * huffmanTreeType
 
     let huffmanTree =
       Node(Node(Node(Node(Node(Leaf('F'),
@@ -59,8 +59,15 @@ module Huff
                      Node(Leaf('N'),
                           Leaf('I')))))
 
+    // explodes a string into a list of chars
+    // params: the string to explode
+    // returns: a list of the chars in the string
     let explode str = [ for chr in str -> chr ]
 
+    // encodeChar - encodes one char according to the given 
+    // huffmanTable above
+    // params: the char to encode
+    // returns: the string encoding for the char
     let encodeChar ch = 
         let rec findInTable table x = 
             match table with
@@ -69,10 +76,10 @@ module Huff
                              then vl
                              else findInTable t x 
         findInTable huffmanTable ch
-    
 
-    // decode part
-
+    // implode - implodes a list of chars into a string
+    // params: the list of chars to implode
+    // returns: the string of the given chars
     let implode lst =
         let rec impl l accum =
             match l with
@@ -81,24 +88,39 @@ module Huff
         impl lst ""
      
 
-
+    // findCharInTree - recursive helper function to find one char in the given tree
+    // params: the tree to search in 
+    //         the list of zeros and ones to search with
+    // returns: a tuple with the char found and the remaining list
     let rec findCharInTree tree lst1 = 
         match tree with 
         | Leaf( c ) -> ( c , lst1 )
         | Node( left, right ) -> match lst1 with 
-                                 | [] -> printf "invalid"
+                                 | [] -> printf "invalid encoding"
                                          ( 'x', [] )
                                  | '0'::tail -> findCharInTree left tail
                                  | '1'::tail -> findCharInTree right tail
 
+    // decodeList - recusive helper function to decode a list of zeros and ones
+    // params: the list of zeros and ones
+    //         accumulator - this should initially be an empty list
+    // returns: a list of chars 
     let rec decodeList lst accum = 
         match (findCharInTree huffmanTree lst) with
         | ( c , [] ) -> accum @ [c]
         | ( c , h::t ) -> decodeList (h::t) (accum @ [c])
 
 
+    // decode - main decode function.
+    //          decodes a string of zeros and ones into a string of chars
+    // params: string of zeros and ones
+    // returns: string of chars
     let decode str = implode ( decodeList ( explode str ) [] ) 
     
+    // encode - main encode function
+    //          encodes a string into a string of zeros and ones
+    // params: the string to encode, must be solely comprized of capital chars
+    // returns: a string of zeros and ones
     let encode str = implode [for chr in (explode str) do yield!( explode( encodeChar chr) )]
     
         
