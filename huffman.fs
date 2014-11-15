@@ -125,5 +125,22 @@ module Huff
     // params: the string to encode, must be solely comprized of capital chars
     // returns: a string of zeros and ones
     let encode str = implode [for chr in (explode str) do yield!( explode( encodeChar chr) )]
-    
+
+
+    // a test function for good measure
+    let test = 
+        lazy(
+        
+        let bFox =  "THEQUICKBROWNFOXJUMPEDOVERTHELAZYDOG" 
+        let encodedFox = encode bFox
+        let decodedFox = decode encodedFox
+
+        printfn "original: %s" bFox
+        printfn "encoded: %s"  encodedFox
+        printfn "decoded: %s"  decodedFox
+        if bFox = decodedFox
+            then printfn "TEST PASSED"
+            else printfn "TEST FAILED"
+        )
+         
         
