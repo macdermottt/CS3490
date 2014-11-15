@@ -101,7 +101,7 @@ module Huff
         // returns: a tuple with the char found and the remaining list
         let rec findCharInTree tree lst = 
             match tree with 
-            | Leaf( c ) -> ( c , lst1 )
+            | Leaf( c ) -> ( c , lst )
             | Node( left, right ) -> match lst with 
                                      | [] -> printf "invalid encoding"
                                              ( 'x', [] )
