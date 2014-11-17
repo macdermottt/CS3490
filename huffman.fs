@@ -13,16 +13,6 @@ module Huff
       | Leaf of char
       | Node of huffmanTreeType * huffmanTreeType
 
-    // zip function provided in assignment
-    let rec zip L1 L2 =
-      match L1 with
-      | [] -> []
-      | h1::t1 -> match L2 with
-                  | [] -> []
-                  | h2::t2 -> (h1,h2) :: (zip t1 t2)
-    
-    let asciiTable = zip [for c in 'A'..'Z' do yield c] [for i in 65..90 do yield i]
-
     let huffmanTable = 
         [ ('A',"1011");   ('B',"100000");   ('C',"01000");('D',"10101");    ('E',"110");
           ('F',"00000");  ('G',"100011");   ('H',"0110"); ('I',"1111");     ('J',"000011011");
@@ -71,11 +61,15 @@ module Huff
     let encodeChar ch = 
         let rec findInTable table x = 
             match table with
-            | [] -> "" 
-            | (chr,vl)::t -> if x = chr
-                             then vl
+            | [] -> [] 
+            | (chr,value)::t -> if x = chr
+                             then explode value
                              else findInTable t x 
         findInTable huffmanTable ch
+
+    let encodeList lst = 
+        [ for chr in lst do yield! ( encodeChar chr ) ]
+        
 
     // implode - implodes a list of chars into a string
     // params: the list of chars to implode
@@ -88,43 +82,45 @@ module Huff
         impl lst ""
      
 
+    let decodeList lst = 
+        // decode_tr - recusive helper function to decode a list of zeros and ones
+        // params: the list of zeros and ones
+        //         accumulator - this should initially be an empty list
+        // returns: a list of chars 
+        let rec decode_tr lst accum = 
+        
+            // findCharInTree - recursive helper function to find one char in the given tree
+            // params: the tree to search in 
+            //         the list of zeros and ones to search with
+            // returns: a tuple with the char found and the remaining list
+            let rec findCharInTree tree lst = 
+                match tree with 
+                | Leaf( c ) -> ( c , lst )
+                | Node( left, right ) -> match lst with 
+                                         | [] -> printf "invalid encoding"
+                                                 ( 'x', [] )
+                                         | '0'::tail -> findCharInTree left tail
+                                         | '1'::tail -> findCharInTree right tail
 
-    // decodeList - recusive helper function to decode a list of zeros and ones
-    // params: the list of zeros and ones
-    //         accumulator - this should initially be an empty list
-    // returns: a list of chars 
-    let rec decodeList lst accum = 
-    
-        // findCharInTree - recursive helper function to find one char in the given tree
-        // params: the tree to search in 
-        //         the list of zeros and ones to search with
-        // returns: a tuple with the char found and the remaining list
-        let rec findCharInTree tree lst = 
-            match tree with 
-            | Leaf( c ) -> ( c , lst )
-            | Node( left, right ) -> match lst with 
-                                     | [] -> printf "invalid encoding"
-                                             ( 'x', [] )
-                                     | '0'::tail -> findCharInTree left tail
-                                     | '1'::tail -> findCharInTree right tail
 
+            match (findCharInTree huffmanTree lst) with
+            | ( c , [] ) -> accum @ [c]
+            | ( c , tail ) -> decode_tr tail (accum @ [c])
 
-        match (findCharInTree huffmanTree lst) with
-        | ( c , [] ) -> accum @ [c]
-        | ( c , h::t ) -> decodeList (h::t) (accum @ [c])
-
+        decode_tr lst accum
 
     // decode - main decode function.
     //          decodes a string of zeros and ones into a string of chars
     // params: string of zeros and ones
     // returns: string of chars
-    let decode str = implode ( decodeList ( explode str ) [] ) 
+    let decode = implode >> decodeList >> explode  
     
     // encode - main encode function
     //          encodes a string into a string of zeros and ones
     // params: the string to encode, must be solely comprized of capital chars
     // returns: a string of zeros and ones
-    let encode str = implode [for chr in (explode str) do yield!( explode( encodeChar chr) )]
+    //let encode str = implode [for chr in (explode str) do yield!( explode( encodeChar chr) )]
+    let encode = implode >> encodeList >> explode
 
 
     // a test function for good measure
