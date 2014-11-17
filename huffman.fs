@@ -106,7 +106,9 @@ module Huff
                                          | [] -> printf "invalid encoding"
                                                  ( 'x', [] )
                                          | '0'::tail -> findCharInTree left tail
-                                         |   _::tail -> findCharInTree right tail
+                                         | '1'::tail -> findCharInTree right tail
+                                         |  _ -> printf( "invalid encoding")
+                                                       ( 'x', [] )
 
 
             match (findCharInTree huffmanTree xs) with
