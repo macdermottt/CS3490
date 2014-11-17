@@ -54,20 +54,23 @@ module Huff
     // returns: a list of the chars in the string
     let explode str = [ for chr in str -> chr ]
 
-    // encodeChar - encodes one char according to the given 
-    // huffmanTable above
-    // params: the char to encode
-    // returns: the string encoding for the char
-    let encodeChar ch = 
-        let rec findInTable table x = 
-            match table with
-            | [] -> [] 
-            | (chr,value)::t -> if x = chr
-                             then explode value
-                             else findInTable t x 
-        findInTable huffmanTable ch
+    // encodeList - encodes a list of chars
+    // params - the list of chars
+    // returns - a list of zeros and ones
+    let encodeList lst =
+        // encodeChar - encodes one char according to the given 
+        // huffmanTable above
+        // params: the char to encode
+        // returns: the string encoding for the char
+        let encodeChar ch = 
+            let rec findInTable table x = 
+                match table with
+                | [] -> [] 
+                | (chr,vl)::t -> if x = chr
+                                 then explode vl 
+                                 else findInTable t x 
+            findInTable huffmanTable ch
 
-    let encodeList lst = 
         [ for chr in lst do yield! ( encodeChar chr ) ]
         
 
@@ -75,19 +78,22 @@ module Huff
     // params: the list of chars to implode
     // returns: the string of the given chars
     let implode lst =
-        let rec impl l accum =
-            match l with
+        let rec implode_tr xs accum =
+            match xs with
             | [] -> accum
-            | h::t -> impl t (accum + new string( h, 1))
-        impl lst ""
+            | h::t -> implode_tr t (accum + new string( h, 1))
+        implode_tr lst ""
      
 
+    // decodeList - decodes a list of zeros and ones 
+    // params - the list of zeros and ones to decode
+    // returns - a list of chars
     let decodeList lst = 
         // decode_tr - recusive helper function to decode a list of zeros and ones
         // params: the list of zeros and ones
         //         accumulator - this should initially be an empty list
         // returns: a list of chars 
-        let rec decode_tr lst accum = 
+        let rec decode_tr xs accum = 
         
             // findCharInTree - recursive helper function to find one char in the given tree
             // params: the tree to search in 
@@ -100,27 +106,26 @@ module Huff
                                          | [] -> printf "invalid encoding"
                                                  ( 'x', [] )
                                          | '0'::tail -> findCharInTree left tail
-                                         | '1'::tail -> findCharInTree right tail
+                                         |   _::tail -> findCharInTree right tail
 
 
-            match (findCharInTree huffmanTree lst) with
+            match (findCharInTree huffmanTree xs) with
             | ( c , [] ) -> accum @ [c]
             | ( c , tail ) -> decode_tr tail (accum @ [c])
 
-        decode_tr lst accum
+        decode_tr lst [] 
 
     // decode - main decode function.
     //          decodes a string of zeros and ones into a string of chars
     // params: string of zeros and ones
     // returns: string of chars
-    let decode = implode >> decodeList >> explode  
+    let decode = implode << decodeList << explode  
     
     // encode - main encode function
     //          encodes a string into a string of zeros and ones
     // params: the string to encode, must be solely comprized of capital chars
     // returns: a string of zeros and ones
-    //let encode str = implode [for chr in (explode str) do yield!( explode( encodeChar chr) )]
-    let encode = implode >> encodeList >> explode
+    let encode = implode << encodeList << explode
 
 
     // a test function for good measure
